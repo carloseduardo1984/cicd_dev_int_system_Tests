@@ -115,9 +115,16 @@ jobs:
 
       - name: run cypress tests with chrome
         uses: cypress-io/github-action@v3
-        timeout-minutes: 10
         with:
-          browser: firefox     
+          runTests: false
+          
+      - name: Run Cypress tests with firefox
+        uses: cypress-io/github-action@v2
+        with:
+          install: false
+          browser: firefox
+          headless: false
+        continue-on-error: true
         
   deploy-stage:
     name: STAGE
