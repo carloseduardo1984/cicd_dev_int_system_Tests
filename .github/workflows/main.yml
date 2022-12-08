@@ -86,17 +86,9 @@ jobs:
           name: RunReports
           path: testResults
       
-  testing-qa:
-    name: System tests 1
-    needs: [deploy-int]
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo MOVED - QA
-      
-    #test_schedule:
-  build_int_test:
-     name: System tests 2
-     needs: [deploy-dev]
+  testing-qa-chrome:
+     name: System tests 1
+     needs: [deploy-int]
      runs-on: ubuntu-latest
      steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
@@ -109,10 +101,27 @@ jobs:
         timeout-minutes: 10
         with:
           browser: chrome     
+      
+    #test_schedule:
+  testing-qa-firefox:
+     name: System tests 2
+     needs: [deploy-int]
+     runs-on: ubuntu-latest
+     steps:
+      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: run cypress tests with chrome
+        uses: cypress-io/github-action@v3
+        timeout-minutes: 10
+        with:
+          browser: firefox     
         
   deploy-stage:
     name: STAGE
-    needs: [testing-qa, build_int_test] 
+    needs: [testing-qa-chrome, testing-qa-firefox] 
     runs-on: ubuntu-latest
     steps:
       - run: echo HYPERCARE
