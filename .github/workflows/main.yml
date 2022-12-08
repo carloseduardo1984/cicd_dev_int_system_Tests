@@ -47,7 +47,7 @@ jobs:
       - run: echo UPLOADING REPORT...
       
   deploy-int:
-    name: Integration API test
+    name: Integration API with Newman
     needs: [deploy-dev]
     runs-on: ubuntu-latest
     steps:
@@ -87,7 +87,7 @@ jobs:
           path: testResults
       
   testing-qa-chrome:
-     name: System tests 1
+     name: System test - Cypress Chrome
      needs: [deploy-int]
      runs-on: ubuntu-latest
      steps:
@@ -104,7 +104,7 @@ jobs:
       
     #test_schedule:
   testing-qa-firefox:
-     name: System tests 2
+     name: System test - Cypress Firefox
      needs: [deploy-int]
      runs-on: ubuntu-latest
      steps:
