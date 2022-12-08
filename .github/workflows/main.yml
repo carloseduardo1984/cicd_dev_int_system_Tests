@@ -1,0 +1,126 @@
+#DO THE TEST EACH 6 HOURS FROM MONDAY TO FRIDAY
+name: OUR PIPELINE
+on: 
+ # schedule:
+ # - cron: '0 */6 * * 5'
+  
+  push:
+    branches:
+     - 'main'
+      
+  workflow_dispatch:
+
+jobs:
+        
+  build:
+    name: Build 
+    runs-on: ubuntu-latest
+    steps:
+        - run: echo building
+      
+  deploy-dev:
+    name: Unit Tests with Jest    
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: "14"
+
+      # Install required deps for action - jest, jest-html-report
+      - name: Install Dependencies
+        run: cd Unit_test_jest && npm install --save-dev jest jest-html-reporter 
+
+      # Finally, run our tests
+      - name: Run the tests
+        run: cd Unit_test_jest && npm test
+        
+      - name: Generate report
+        run:  cd Unit_test_jest && npm test
+      - name: Upload report
+        uses: actions/upload-artifact@v2
+        with:
+          name: jest-report
+          path: './test-report.html'
+      - run: echo UPLOADING REPORT...
+      
+  deploy-int:
+    name: Integration API test
+    needs: [deploy-dev]
+    runs-on: ubuntu-latest
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+
+      # INstall Node on the runner
+      - name: Install Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: "12.x"
+
+      # Install the newman command line utility and also install the html extra reporter
+      - name: Install newman
+        run: |
+          npm install -g newman
+          npm install -g newman-reporter-htmlextra
+      # Make directory to upload the test results
+      - name: Make Directory for results
+        run: mkdir -p testResults
+
+
+      # Run the POSTMAN collection
+      - name: Run POSTMAN collection on real time
+        run: |
+          newman run ./newman/Minha_colecao.postman_collection.json -e ./newman/workspace.postman_globals.json
+      # Run the POSTMAN collection
+      - name: Run POSTMAN collection
+        run: |
+          newman run ./newman/Minha_colecao.postman_collection.json -e ./newman/workspace.postman_globals.json -r htmlextra --reporter-htmlextra-export testResults/htmlreport.html --reporter-htmlextra-darkTheme  > testResults/runreport1.html
+      # Upload the contents of Test Results directory to workspace
+      - name: Output the run Details
+        uses: actions/upload-artifact@v2
+        with:
+          name: RunReports
+          path: testResults
+      
+  testing-qa:
+    name: System tests 1
+    needs: [deploy-int]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo MOVED - QA
+      
+    #test_schedule:
+  build_int_test:
+     name: System tests 2
+     needs: [deploy-dev]
+     runs-on: ubuntu-latest
+     steps:
+      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+
+      - name: Check out repository code
+        uses: actions/checkout@v3
+
+      - name: run cypress tests with chrome
+        uses: cypress-io/github-action@v3
+        timeout-minutes: 10
+        with:
+          browser: chrome     
+        
+  deploy-stage:
+    name: STAGE
+    needs: [testing-qa, build_int_test] 
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo HYPERCARE
+      
+  deploy-production:
+    name: PRODUCTION
+    needs: [deploy-stage]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo GO-LIVE
+
