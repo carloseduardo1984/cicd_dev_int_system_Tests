@@ -43,7 +43,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: jest-report
-          path: './test-report.html'
+          path: './Unit_test_jest/test-report.html'
       - run: echo UPLOADING REPORT...
       
   deploy-int:
@@ -113,17 +113,11 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v3
 
-      - name: run cypress tests with chrome
+      - name: run cypress tests with firefox
         uses: cypress-io/github-action@v3
+        timeout-minutes: 10
         with:
-          runTests: false
-          
-      - name: Run Cypress tests with firefox
-        uses: cypress-io/github-action@v2
-        with:
-          install: false
           browser: firefox
-          headless: false
         continue-on-error: true
         
   deploy-stage:
